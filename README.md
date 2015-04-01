@@ -4,7 +4,7 @@ Template::Provider::PerContextDBIC - Load templates using DBIx::Class with per-c
 
 # VERSION
 
-version 0.001
+version 0.000001
 
 # SYNOPSIS
 
