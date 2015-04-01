@@ -1,6 +1,7 @@
 package Template::Provider::PerContextDBIC;
 # ABSTRACT: Load templates using DBIx::Class with per-context resultsets
 
+
 use strict;
 use warnings;
 
@@ -9,7 +10,6 @@ use parent 'Template::Provider';
 use Carp qw( croak );
 use Date::Parse ();
 # use Data::Printer;
-
 
 =head1 SYNOPSIS
 
@@ -55,115 +55,126 @@ between calls to C<process>.
 
 =head1 DESCRIPTION
 
-Template::Provider::PerContextDBIC allows a L<Template> object to fetch its data using
-L<DBIx::Class> instead of, or in addition to, the default filesystem-based
-L<Template::Provider>. The PerContextDBIC provider also allows changing the C<resultset> 
-between calls to $template->process.
+Template::Provider::PerContextDBIC allows a L<Template> object to fetch
+its data using L<DBIx::Class> instead of, or in addition to, the default
+filesystem-based L<Template::Provider>. The PerContextDBIC provider also
+allows changing the C<resultset> between calls to $template->process.
 
-This module was inspired by both L<Template::Provider::DBIC> and 
-L<Template::Provider::PrefixDBIC>. It uses ideas from both of the other excellent
-modules. 
+This module was inspired by both L<Template::Provider::DBIC> and
+L<Template::Provider::PrefixDBIC>. It uses ideas from both of the other
+excellent modules.
 
 =attr COLUMN_NAME
 
-The table column that contains the template name. This will default to 'tmpl_name'.
+The table column that contains the template name. This will default to
+'tmpl_name'.
 
 =attr COLUMN_CONTENT
 
-The table column that contains the template data itself. This will default to
-'content'.
+The table column that contains the template data itself. This will
+default to 'content'.
 
 =attr COLUMN_MODIFIED
 
-The table column that contains the date that the template was last modified.
-This will default to 'modified'.
+The table column that contains the date that the template was last
+modified. This will default to 'modified'.
 
 =attr RESULTSET
 
-The resultset to be used to C<find> templates. It can be left blank as long 
-as C<$provider->resultset(...)> is called prior to template processing.
+The resultset to be used to C<find> templates. It can be left blank as
+long as C<$provider->resultset(...)> is called prior to template
+processing.
 
 =attr RESTRICTBY_NAME
 
-The unique value identifying the C<$resultset> to use for creating cache 
-directories and lookups. Can be left blank if C<$resultset> has a C<restricting_object> 
-method (eg. using L<DBIx::Class::Schema::RestrictWithObject>).
+The unique value identifying the C<$resultset> to use for creating cache
+directories and lookups. Can be left blank if C<$resultset> has a
+C<restricting_object> method (eg. using
+L<DBIx::Class::Schema::RestrictWithObject>).
 
 =attr RESULTSET_METHOD
 
-The sub reference to be called during C<fetch> which will return a two item list 
-with C<$resultset> and C<$restrictby_name>.
+The sub reference to be called during C<fetch> which will return a two
+item list with C<$resultset> and C<$restrictby_name>.
 
 =attr TOLERANT_QUERY
 
-If set to a true value, then a query with more than one row will cause the provider 
-to return C<STATUS_DECLINED> rather than C<STATUS_ERROR>.
+If set to a true value, then a query with more than one row will cause
+the provider to return C<STATUS_DECLINED> rather than C<STATUS_ERROR>.
 
 =method ->_init( \%options )
 
-Check that valid Template::Provider::PerContextDBIC-specific arguments have been
-supplied and store the appropriate values. See above for the available
-options.
+Check that valid Template::Provider::PerContextDBIC-specific arguments
+have been supplied and store the appropriate values. See above for the
+available options.
 
 =method ->lookup_name( $name )
 
-This method returns the name of the template that will be looked up in the 
-database. The C<TEMPLATE_EXTENSION> will be removed as well as the leading 
-table name and restricting object.
+This method returns the name of the template that will be looked up in
+the database. The C<TEMPLATE_EXTENSION> will be removed as well as the
+leading table name and restricting object.
 
 =method ->cache_name( $name )
 
-This method returns the name of the cache entry. It will have the leading 
-table name and restricting object as part of the name. 
+This method returns the name of the cache entry. It will have the
+leading table name and restricting object as part of the name.
 
 =method ->fetch( $name )
 
-This method is called automatically during L<Template>'s C<-E<gt>process()>
-and returns a compiled template for the given C<$name>, using the cache where
-possible.
+This method is called automatically during L<Template>'s
+C<-E<gt>process()> and returns a compiled template for the given
+C<$name>, using the cache where possible.
 
 =method ->_load( $name )
 
-Load the template from the database and return a hash containing its name,
-content, the time it was last modified, and the time it was loaded (now).
+Load the template from the database and return a hash containing its
+name, content, the time it was last modified, and the time it was loaded
+(now).
 
 =method ->_modified( $name, $time )
 
 When called with a single argument, returns the modification time of the
-given template. When called with a second argument it returns true if $name
-has been modified since $time.
+given template. When called with a second argument it returns true if
+$name has been modified since $time.
 
 =method ->resultset($rs, [$restrict_by])
 
-Pass a resultset to use for subsequent template processing. Optionally pass 
-a string to use for making unique cache directory. 
+Pass a resultset to use for subsequent template processing. Optionally
+pass a string to use for making unique cache directory.
 
-If C<$restrict_by> is not set, and the C<$rs> has a C<restricting_object> 
-method (eg. using L<DBIx::Class::Schema::RestrictWithObject>), 
-then C<$restrict_by> will be set to a string containing the
-C<$restricting_object->result_source->name> and C<$restricting_object->id>. 
+If C<$restrict_by> is not set, and the C<$rs> has a
+C<restricting_object> method (eg. using
+L<DBIx::Class::Schema::RestrictWithObject>), then C<$restrict_by> will
+be set to a string containing the
+C<$restricting_object->result_source->name> and
+C<$restricting_object->id>.
 
-If both C<$restrict_by> is set, and the C<$rs> has a C<restricting_object> 
-method, then both values are used to create a unique cache directory. 
+If both C<$restrict_by> is set, and the C<$rs> has a
+C<restricting_object> method, then both values are used to create a
+unique cache directory.
 
 =method ->get_template($lookup_name, @columns)
 
-Pass a template name to retrieve from the database, as well as list of columuns to
-be included. The column names are specified as the keys C<COLUMN_CONTENT> and 
-C<COLUMN_MODIFIED>. A C<$row> will be returned if lookup_name matches a record.
+Pass a template name to retrieve from the database, as well as list of
+columuns to be included. The column names are specified as the keys
+C<COLUMN_CONTENT> and C<COLUMN_MODIFIED>. A C<$row> will be returned if
+lookup_name matches a record.
 
-The database query is done using C<search> rather than C<find> to avoid warnings
-when query returns more than one record. The author feels that C<find> is the 
-correct method, but puts too much burden to ensure unique queries.
+The database query is done using C<search> rather than C<find> to avoid
+warnings when query returns more than one record. The author feels that
+C<find> is the correct method, but puts too much burden to ensure unique
+queries.
 
-The default behaviour is to return a C<STATUS_ERROR> if more than one row is returned.
-You can change that behaviour with the C<TOLERANT_QUERY> option. 
+The default behaviour is to return a C<STATUS_ERROR> if more than one
+row is returned. You can change that behaviour with the
+C<TOLERANT_QUERY> option.
 
 =head1 USE WITH OTHER PROVIDERS
 
-By default Template::Provider::PerContextDBIC will raise an exception when it cannot
-find the named template. When TOLERANT is set to true it will defer processing
-to the next provider specified in LOAD_TEMPLATES where available. For example:
+By default Template::Provider::PerContextDBIC will raise an exception
+when it cannot find the named template. When TOLERANT is set to true it
+will defer processing to the next provider specified in LOAD_TEMPLATES
+where available. For example:
 
     my $template = Template->new({
         LOAD_TEMPLATES => [
@@ -181,13 +192,14 @@ to the next provider specified in LOAD_TEMPLATES where available. For example:
 =head1 CACHING
 
 When caching is enabled, by setting COMPILE_DIR and/or COMPILE_EXT,
-Template::Provider::PerContextDBIC will create a directory consisting of the database
-DSN and table name. This should prevent conflicts with other databases and
-providers.
+Template::Provider::PerContextDBIC will create a directory consisting of
+the database DSN and table name, and restrict_by name. This should
+prevent conflicts with other databases and providers.
 
-In addition, if the result set has been restricted using L<DBIx::Class::Schema::RestrictWithObject>,
-the cache directory will also be prefixed with the name and id of the restricting object. 
-This should prevent conflicts with other resultsets for the same table. 
+In addition, if the result set has been restricted using
+L<DBIx::Class::Schema::RestrictWithObject>, the cache directory will
+also be prefixed with the name and id of the restricting object. This
+should prevent conflicts with other resultsets for the same table. 
 
 =head1 SEE ALSO
 
@@ -240,11 +252,9 @@ Additionally, use of this module requires an object of the class
 
 =cut
 
-
-
 sub _init {
 	my ( $self, $options ) = @_;
-# 	$self->debug("Doing init for PerContextDBIC") if $self->{ DEBUG };
+# 	$self->debug("_init for PerContextDBIC") if $self->{ DEBUG };
 
 	# Provide defaults as necessary.
 	$self->{COLUMN_NAME}        = $options->{COLUMN_NAME}        || 'tmpl_name';
@@ -322,7 +332,7 @@ sub resultset {
 } ## end sub resultset
 
 
-sub rs_table_name {
+sub _rs_table_name {
 	my $self = shift;
 	return $self->{RESULTSET} ? $self->{RESULTSET}->result_source->name : '';
 }
@@ -333,7 +343,7 @@ sub cache_name {
 	$self->debug("Making cache_name from: $name") if $self->{DEBUG};
 
 	# Determine the name of the table we're dealing with.
-	my $table = $self->rs_table_name;
+	my $table = $self->_rs_table_name;
 
 	return $self->{RESTRICTBY_NAME}
 	  ? "$self->{ RESTRICTBY_NAME }/$table/$name"
@@ -347,16 +357,16 @@ sub lookup_name {
 	$self->debug("Making lookup_name from: $name") if $self->{DEBUG};
 
 	my $restrictby_name = $self->{RESTRICTBY_NAME};
-	my $table           = $self->rs_table_name;
+	my $table           = $self->_rs_table_name;
 	my $tmpl_ext        = $self->{TEMPLATE_EXTENSION};
-	$self->debug("Removing: $restrictby_name") if $self->{DEBUG};
-	$self->debug("Removing: $table") if $self->{DEBUG};
-	$self->debug("Removing: $tmpl_ext") if $self->{DEBUG};
+# 	$self->debug("Removing: $restrictby_name") if $self->{DEBUG};
+# 	$self->debug("Removing: $table") if $self->{DEBUG};
+# 	$self->debug("Removing: $tmpl_ext") if $self->{DEBUG};
 
 	$name =~ s/$restrictby_name\/// if $restrictby_name; # Don't want to remove just slash by itself if $restrictby_name is empty
 	$name =~ s/$table\///           if $table;
 	$name =~ s/$tmpl_ext//;
-	$self->debug("Using lookup_name: $name") if $self->{DEBUG};
+# 	$self->debug("Using lookup_name: $name") if $self->{DEBUG};
 
 	return $name;
 } ## end sub lookup_name
@@ -419,7 +429,7 @@ sub fetch {
 	if ( $caching && ( $slot = $self->{LOOKUP}->{$cache_name} ) ) {
 		( $data, $error ) = $self->_refresh($slot);
 		$data = $slot->[Template::Provider::DATA] unless $error;
-# 		$self->debug("Doing fetch - lookup from memory") if $self->{ DEBUG };
+# 		$self->debug("fetch - lookup from memory") if $self->{ DEBUG };
 	}
 	# ...otherwise if this template has already been compiled and cached (but
 	# not by this object) try to load it from the disk, providing it hasn't
@@ -427,7 +437,7 @@ sub fetch {
 	elsif ($compiled_filename
 		&& -f $compiled_filename
 		&& !$self->_modified( $cache_name, ( stat(_) )[9] ) ) {
-# 		$self->debug("Doing fetch - load from cache disk") if $self->{ DEBUG };
+# 		$self->debug("fetch - load from cache disk") if $self->{ DEBUG };
 		$data = $self->_load_compiled($compiled_filename);
 		$error = $self->error() unless $data;
 
@@ -437,7 +447,7 @@ sub fetch {
 	# ...else there is nothing already cached for this template so load it
 	# from the database.
 	else {
-# 		$self->debug("Doing fetch - lookup from database") if $self->{ DEBUG };
+# 		$self->debug("fetch - lookup from database") if $self->{ DEBUG };
 		( $data, $error ) = $self->_load("$name");
 
 		if ($error) {
@@ -508,7 +518,7 @@ sub _load {
 # 	$self->debug("_load($name)") if $self->{DEBUG};
 
 	my $lookup_name = $self->lookup_name($name);
-# 	$self->debug("Doing _load for $lookup_name") if $self->{ DEBUG };
+# 	$self->debug("_load for $lookup_name") if $self->{ DEBUG };
 
 	# Try to retrieve the template from the database.
 	my ( $template, $tmpl_error ) = $self->get_template($lookup_name, qw/COLUMN_CONTENT COLUMN_MODIFIED/);
@@ -518,7 +528,6 @@ sub _load {
 		  ? (
 			undef,
 			Template::Constants::STATUS_DECLINED
-
 		  )
 		  : (
 			$tmpl_error,
@@ -541,7 +550,7 @@ sub _load {
 
 	} else {
 		( $data, $error ) = (
-			"Could not retrieve '$lookup_name' from the resultset '" . $self->rs_table_name . "'",
+			"Could not retrieve '$lookup_name' from the resultset '" . $self->_rs_table_name . "'",
 			Template::Constants::STATUS_ERROR
 		);
 	}
@@ -565,7 +574,6 @@ sub _modified {
 
 	my $modified = Date::Parse::str2time( $template->get_column( $self->{COLUMN_MODIFIED} ) )
 	  || return $time ? 1 : 0;
-
 # 	$self->debug("Modified $lookup_name at $modified") if $self->{DEBUG};
 
 	return $time ? $modified > $time : $modified;
