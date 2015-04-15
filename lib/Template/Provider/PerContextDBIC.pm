@@ -420,9 +420,9 @@ sub fetch {
 			  if $self->{DEBUG};
 			return ( undef, Template::Constants::STATUS_DECLINED );
 		} else {
-			delete $self->{NOTFOUND}->{$name};
 			$self->debug(" remove file [$cache_name] from negative cache.")
 			  if $self->{DEBUG};
+			delete $self->{NOTFOUND}->{$cache_name};
 		}
 	} ## end if ( my $last_stat_time = $self->...)
 
