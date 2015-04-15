@@ -574,8 +574,9 @@ sub _modified {
 	# Try to retrieve the template from the database.
 	my ( $template, $tmpl_error ) = $self->get_template($lookup_name, qw/COLUMN_MODIFIED/);
 
-	return 0 if $tmpl_error;
-	return 0 unless $template;
+	# return true to say template is modified (must be true if template doesn't exist)
+	return 1 if $tmpl_error;
+	return 1 unless $template;
 
 	my $modified = Date::Parse::str2time( $template->get_column( $self->{COLUMN_MODIFIED} ) )
 	  || return $time ? 1 : 0;
