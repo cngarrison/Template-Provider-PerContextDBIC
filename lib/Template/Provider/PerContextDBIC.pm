@@ -428,7 +428,7 @@ sub fetch {
 
 	# If caching is enabled and an entry already exists, refresh its cache
 	# slot and extract the data...
-	if ( $caching && ( $slot = $self->{LOOKUP}->{$cache_name} ) ) {
+	if ( $caching && ( $slot = $self->{LOOKUP}->{$cache_name} ) && !$self->_modified( $cache_name ) ) {
 		( $data, $error ) = $self->_refresh($slot);
 		$data = $slot->[Template::Provider::DATA] unless $error;
 		$self->debug("fetch - lookup from memory") if $self->{ DEBUG };
