@@ -454,6 +454,8 @@ sub fetch {
 			# Template could not be fetched.  Add to the negative/notfound cache.
 			#$self->debug("Adding to NOTFOUND: $cache_name") if $self->{ DEBUG };
 			$self->{NOTFOUND}->{$cache_name} = time;
+			unlink $compiled_filename
+			  if $compiled_filename && -f $compiled_filename;
 		}
 
 		if ( !$error ) {
