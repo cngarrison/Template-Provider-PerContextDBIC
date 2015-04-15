@@ -375,7 +375,7 @@ sub lookup_name {
 sub fetch {
 	my ( $self, $name ) = @_;
 	my $stat_ttl = $self->{STAT_TTL};
-# 	$self->debug("fetch($name)") if $self->{ DEBUG };
+	$self->debug("fetch($name)") if $self->{ DEBUG };
 
 	# We're not interested in GLOBs or file handles.
 	if ( ref $name ) {
@@ -403,7 +403,7 @@ sub fetch {
 
 	# Determine the path this template would be cached to.
 	my $compiled_filename = $self->_compiled_filename( $self->{DSN} . "/$cache_name" );
-# 	$self->debug("compiled_filename: $compiled_filename") if $self->{ DEBUG };
+	$self->debug("compiled_filename: $compiled_filename") if $self->{ DEBUG };
 
 	my ( $data, $error, $slot );
 
@@ -413,7 +413,7 @@ sub fetch {
 
 	# Otherwise, see if we already know the template is not found
 	if ( my $last_stat_time = $self->{NOTFOUND}->{$cache_name} ) {
-		#$self->debug("In NOTFOUND: $cache_name") if $self->{ DEBUG };
+		$self->debug("In NOTFOUND: $cache_name") if $self->{ DEBUG };
 		my $expires_in = $last_stat_time + $stat_ttl - time;
 		if ( $expires_in > 0 ) {
 			$self->debug(" file [$cache_name] in negative cache.  Expires in $expires_in seconds")
@@ -421,6 +421,8 @@ sub fetch {
 			return ( undef, Template::Constants::STATUS_DECLINED );
 		} else {
 			delete $self->{NOTFOUND}->{$name};
+			$self->debug(" remove file [$cache_name] from negative cache.")
+			  if $self->{DEBUG};
 		}
 	} ## end if ( my $last_stat_time = $self->...)
 
@@ -429,7 +431,7 @@ sub fetch {
 	if ( $caching && ( $slot = $self->{LOOKUP}->{$cache_name} ) ) {
 		( $data, $error ) = $self->_refresh($slot);
 		$data = $slot->[Template::Provider::DATA] unless $error;
-# 		$self->debug("fetch - lookup from memory") if $self->{ DEBUG };
+		$self->debug("fetch - lookup from memory") if $self->{ DEBUG };
 	}
 	# ...otherwise if this template has already been compiled and cached (but
 	# not by this object) try to load it from the disk, providing it hasn't
@@ -437,7 +439,8 @@ sub fetch {
 	elsif ($compiled_filename
 		&& -f $compiled_filename
 		&& !$self->_modified( $cache_name, ( stat(_) )[9] ) ) {
-# 		$self->debug("fetch - load from cache disk") if $self->{ DEBUG };
+		$self->debug("template modified: ".$self->_modified( $cache_name, ( stat(_) )[9] )) if $self->{ DEBUG };
+		$self->debug("fetch - load from cache disk") if $self->{ DEBUG };
 		$data = $self->_load_compiled($compiled_filename);
 		$error = $self->error() unless $data;
 
@@ -447,12 +450,12 @@ sub fetch {
 	# ...else there is nothing already cached for this template so load it
 	# from the database.
 	else {
-# 		$self->debug("fetch - lookup from database") if $self->{ DEBUG };
+		$self->debug("fetch - lookup from database") if $self->{ DEBUG };
 		( $data, $error ) = $self->_load("$name");
 
 		if ($error) {
 			# Template could not be fetched.  Add to the negative/notfound cache.
-			#$self->debug("Adding to NOTFOUND: $cache_name") if $self->{ DEBUG };
+			$self->debug("Adding to NOTFOUND: $cache_name") if $self->{ DEBUG };
 			$self->{NOTFOUND}->{$cache_name} = time;
 			unlink $compiled_filename
 			  if $compiled_filename && -f $compiled_filename;
